@@ -1,4 +1,4 @@
-export const authReducer = (state = { isLoggedIn: false }, action:any) => {
+export const authReducer = (state = { isLoggedIn: false }, action: any) => {
   switch (action.type) {
     case "auth/login":
       return { ...state, isLoggedIn: true };
@@ -7,4 +7,5 @@ export const authReducer = (state = { isLoggedIn: false }, action:any) => {
     default:
       return state;
   }
-};
+
+}
