@@ -11,7 +11,14 @@ async function bootstrap() {
     transform: true,
   }),
 );
-  await app.listen(process.env.PORT ?? 3000);
+ app.enableCors({
+    // origin: process.env.FRONTEND_URL,
+    origin: true,
+    credentials: true,
+  });
+
+  app.setGlobalPrefix('api');
+  await app.listen(process.env.PORT ?? 8000);
 
 }
 bootstrap();
