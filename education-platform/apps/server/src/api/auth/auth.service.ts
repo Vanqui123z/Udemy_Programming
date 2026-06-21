@@ -3,12 +3,12 @@ import { PrismaService } from '../../prisma/prisma.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '../../utils/Redis/redist.service';
-import { MailService } from 'src/utils/Email/mail.service';
+import { MailService } from '@/utils/Email/mail.service';
 import { SocialLoginDto } from './DTO/LoginDTO';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwtService: JwtService, private redisService: RedisService, private mailService: MailService) { }
+  constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService, private readonly redisService: RedisService, private readonly mailService: MailService) { }
   async login(LoginDTO: any): Promise<any> {
     const user = await this.prisma.users.findUnique({
       where: { email: LoginDTO.email },
@@ -58,7 +58,7 @@ export class AuthService {
         email: RegisterDTO.email,
         full_name: RegisterDTO.full_name,
         password_hash: passwordHash,
-        role: 'student',
+        role: 'PARENT',
       },
     });
     const payload = {
@@ -127,7 +127,7 @@ export class AuthService {
           email: dto.email,
           full_name: dto.full_name,
           avatar_url: dto.avatar ,
-          role: 'student',
+          role: 'PARENT',
           password_hash: '', 
           provider: dto.provider,
           providerId: dto.providerId,
@@ -141,6 +141,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      full_name: user.full_name,
     };
 
     return {

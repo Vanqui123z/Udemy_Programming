@@ -6,225 +6,479 @@ datasource db {
   provider = "postgresql"
 }
 
-model answers {
-  id                   String                 @id @db.Uuid
-  question_id          String?                @db.Uuid
-  content              String?
-  is_correct           Boolean?
-  created_at           DateTime?              @db.Timestamp(6)
-  updated_at           DateTime?              @updatedAt @db.Timestamp(6)
-  questions            questions?             @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  quiz_attempt_answers quiz_attempt_answers[]
+/**
+ * =========================
+ * USER
+ * =========================
+ */
+model Users {
+  id            String  @id @default(uuid()) @db.Uuid
+  email         String  @unique @db.VarChar(255)
+  password_hash String  @db.VarChar(255)
+  username      String?
+  full_name     String  @db.VarChar(255)
+
+  avatarId            String?      @unique @db.Uuid
+  avatar              Attachment?  @relation("UserAvatar", fields: [avatarId], references: [id])
+  uploadedAttachments Attachment[] @relation("AttachmentUploader")
+  gender              Gender?
+  birthDate           DateTime?
+
+  role UserRole @default(PARENT)
+
+  provider   AuthProvider @default(LOCAL)
+  providerId String?
+
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  parentLinks FamilyMember[] @relation("ParentRelation")
+  memberLinks FamilyMember[] @relation("MemberRelation")
+
+  parentTasks Task[] @relation("ParentTasks")
+
+  memberAssignments TaskAssignment[] @relation("MemberAssignments")
+
+  submissions   Submission[]
+  notifications Notification[]
+  aiGenerations AIGeneration[]
+  auditLogs     AuditLog[]
+
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
 }
 
-model categories {
-  id         String    @id @db.Uuid
-  name       String    @db.VarChar(100)
-  created_at DateTime? @db.Timestamp(6)
-  updated_at DateTime? @updatedAt @db.Timestamp(6)
-  courses    courses[]
+/**
+ * =========================
+ * FAMILY
+ * =========================
+ */
+model FamilyMember {
+  id String @id @default(uuid()) @db.Uuid
+
+  parentId String  @db.Uuid
+  memberId String  @db.Uuid
+
+  grade String? @db.VarChar(2) // "1" -> "12"
+
+  nickname String?
+
+  parent Users @relation("ParentRelation", fields: [parentId], references: [id], onDelete: Cascade)
+  member Users @relation("MemberRelation", fields: [memberId], references: [id], onDelete: Cascade)
+
+   interests Interest[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([parentId, memberId])
+  @@index([parentId])
+  @@index([memberId])
+  @@map("family_members")
 }
 
-model conversation_participants {
-  conversation_id String        @db.Uuid
-  user_id         String        @db.Uuid
-  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users           users         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([conversation_id, user_id])
+/**
+ * =========================
+ * INTEREST
+ * =========================
+ */
+model Interest {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique
+
+  members FamilyMember[]
+  createdAt DateTime         @default(now())
+
+  @@map("interests")
 }
 
-model conversations {
-  id                        String                      @id @db.Uuid
-  created_at                DateTime?                   @db.Timestamp(6)
-  conversation_participants conversation_participants[]
-  messages                  messages[]
+
+/**
+ * =========================
+ * TASK
+ * =========================
+ */
+model Task {
+  id String @id @default(uuid()) @db.Uuid
+
+  parentId String @db.Uuid
+
+  title String
+  note  String?
+
+  assignedAt DateTime  @default(now())
+  dueAt      DateTime?
+  duration   String?
+  aiGenerated Boolean @default(false)
+
+  parent Users @relation("ParentTasks", fields: [parentId], references: [id], onDelete: Cascade)
+
+  assignments TaskAssignment[]
+  attachments TaskAttachment[]
+  questions   TaskQuestion[]
+  submissions Submission[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([parentId])
+  @@index([dueAt])
+  @@map("tasks")
 }
 
-model courses {
-  id            String        @id @db.Uuid
-  category_id   String?       @db.Uuid
-  teacher_id    String?       @db.Uuid
-  title         String        @db.VarChar(255)
-  slug          String        @unique @db.VarChar(255)
-  description   String?
-  thumbnail_url String?
-  level         String?       @db.VarChar(50)
-  is_published  Boolean?      @default(false)
-  created_at    DateTime?     @db.Timestamp(6)
-  updated_at    DateTime?     @updatedAt @db.Timestamp(6)
-  categories    categories?   @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users         users?        @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  enrollments   enrollments[]
-  reviews       reviews[]
-  sections      sections[]
+/**
+ * =========================
+ * ATTACHMENT
+ * =========================
+ */
+model Attachment {
+  id String @id @default(uuid()) @db.Uuid
+
+  publicId String         @unique
+  url      String
+  fileName String
+  mimeType String
+  fileSize BigInt
+  type     AttachmentType
+
+  uploadedById String?  @db.Uuid
+  uploadedBy   Users?   @relation("AttachmentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  avatarOf     Users?   @relation("UserAvatar")
+  createdAt    DateTime @default(now())
+
+  taskLinks       TaskAttachment[]
+  submissionLinks SubmissionAttachment[]
+
+  @@index([uploadedById])
+  @@map("attachments")
 }
 
-model enrollments {
-  id          String    @id @db.Uuid
-  user_id     String?   @db.Uuid
-  course_id   String?   @db.Uuid
-  enrolled_at DateTime? @db.Timestamp(6)
-  courses     courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users       users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * TASK ASSIGNMENT
+ * =========================
+ */
+model TaskAssignment {
+  id String @id @default(uuid()) @db.Uuid
 
-  @@unique([user_id, course_id])
+  taskId   String @db.Uuid
+  memberId String @db.Uuid
+
+  status TaskStatus @default(ASSIGNED)
+
+  assignedAt  DateTime  @default(now())
+  viewedAt    DateTime?
+  completedAt DateTime?
+
+  task   Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  member Users @relation("MemberAssignments", fields: [memberId], references: [id], onDelete: Cascade)
+
+  submissions Submission[]
+
+  @@unique([taskId, memberId])
+  @@index([memberId, status])
+  @@index([taskId])
+  @@map("task_assignments")
 }
 
-model files {
-  id          String    @id @db.Uuid
-  uploader_id String?   @db.Uuid
-  file_name   String?   @db.VarChar(255)
-  file_url    String?
-  file_size   BigInt?
-  mime_type   String?   @db.VarChar(100)
-  created_at  DateTime? @db.Timestamp(6)
-  users       users?    @relation(fields: [uploader_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * TASK ATTACHMENT
+ * =========================
+ */
+model TaskAttachment {
+  taskId       String @db.Uuid
+  attachmentId String @db.Uuid
+
+  task       Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  attachment Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, attachmentId])
+  @@map("task_attachments")
 }
 
-model lessons {
-  id               String     @id @db.Uuid
-  section_id       String?    @db.Uuid
-  title            String?    @db.VarChar(255)
-  description      String?
-  video_url        String?
-  duration_seconds Int?
-  sort_order       Int?
-  created_at       DateTime?  @db.Timestamp(6)
-  updated_at       DateTime?  @updatedAt @db.Timestamp(6)
-  sections         sections?  @relation(fields: [section_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  progress         progress[]
-  quizzes          quizzes[]
+/**
+ * =========================
+ * SUBMISSION ATTACHMENT
+ * =========================
+ */
+model SubmissionAttachment {
+  submissionId String @db.Uuid
+  attachmentId String @db.Uuid
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  attachment Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+
+  @@id([submissionId, attachmentId])
+  @@map("submission_attachments")
 }
 
-model messages {
-  id              String         @id @db.Uuid
-  conversation_id String?        @db.Uuid
-  sender_id       String?        @db.Uuid
-  content         String?
-  created_at      DateTime?      @db.Timestamp(6)
-  conversations   conversations? @relation(fields: [conversation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users           users?         @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * TASK QUESTION
+ * =========================
+ */
+model TaskQuestion {
+  id String @id @default(uuid()) @db.Uuid
+
+  taskId       String       @db.Uuid
+  questionNo   Int
+  questionType QuestionType
+
+  content       String
+  correctAnswer String?
+  explanation   String?
+  score         Float   @default(1)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  options QuestionOption[]
+  answers SubmissionAnswer[]
+
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@map("task_questions")
 }
 
-model notifications {
-  id         String    @id @db.Uuid
-  user_id    String?   @db.Uuid
-  title      String?   @db.VarChar(255)
-  content    String?
-  is_read    Boolean?  @default(false)
-  created_at DateTime? @db.Timestamp(6)
-  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * QUESTION OPTION
+ * =========================
+ */
+model QuestionOption {
+  id String @id @default(uuid()) @db.Uuid
+
+  questionId    String  @db.Uuid
+  optionKey     String
+  optionContent String
+  isCorrect     Boolean @default(false)
+
+  question TaskQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("question_options")
 }
 
-model progress {
-  id             String    @id @db.Uuid
-  user_id        String?   @db.Uuid
-  lesson_id      String?   @db.Uuid
-  current_second Int?      @default(0)
-  completed      Boolean?  @default(false)
-  completed_at   DateTime? @db.Timestamp(6)
-  created_at     DateTime? @db.Timestamp(6)
-  updated_at     DateTime? @updatedAt @db.Timestamp(6)
-  lessons        lessons?  @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users          users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * SUBMISSION
+ * =========================
+ */
+model Submission {
+  id String @id @default(uuid()) @db.Uuid
 
-  @@unique([user_id, lesson_id])
+  taskId       String @db.Uuid
+  assignmentId String @db.Uuid
+  memberId     String @db.Uuid
+
+  submissionNo Int              @default(1)
+  note         String?
+  status       SubmissionStatus @default(DRAFT)
+  submittedAt  DateTime?
+
+  task       Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  assignment TaskAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  member     Users          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  attachments SubmissionAttachment[]
+  answers     SubmissionAnswer[]
+  analyses    AIAnalysis[]
+
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@index([memberId, status])
+  @@map("submissions")
 }
 
-model questions {
-  id                   String                 @id @db.Uuid
-  quiz_id              String?                @db.Uuid
-  content              String?
-  sort_order           Int?
-  created_at           DateTime?              @db.Timestamp(6)
-  updated_at           DateTime?              @updatedAt @db.Timestamp(6)
-  answers              answers[]
-  quizzes              quizzes?               @relation(fields: [quiz_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  quiz_attempt_answers quiz_attempt_answers[]
+/**
+ * =========================
+ * SUBMISSION ANSWER
+ * =========================
+ */
+model SubmissionAnswer {
+  id String @id @default(uuid()) @db.Uuid
+
+  submissionId String @db.Uuid
+  questionId   String @db.Uuid
+
+  answerContent String?
+  aiScore       Float?
+  aiFeedback    String?
+
+  submission Submission   @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question   TaskQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([questionId])
+  @@map("submission_answers")
 }
 
-model quiz_attempt_answers {
-  id            String         @id @db.Uuid
-  attempt_id    String?        @db.Uuid
-  question_id   String?        @db.Uuid
-  answer_id     String?        @db.Uuid
-  answers       answers?       @relation(fields: [answer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  quiz_attempts quiz_attempts? @relation(fields: [attempt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  questions     questions?     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * NOTIFICATION
+ * =========================
+ */
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+
+  type    NotificationType
+  title   String
+  content String
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
 }
 
-model quiz_attempts {
-  id                   String                 @id @db.Uuid
-  quiz_id              String?                @db.Uuid
-  user_id              String?                @db.Uuid
-  score                Decimal?               @db.Decimal(5, 2)
-  submitted_at         DateTime?              @db.Timestamp(6)
-  created_at           DateTime?              @db.Timestamp(6)
-  quiz_attempt_answers quiz_attempt_answers[]
-  quizzes              quizzes?               @relation(fields: [quiz_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users                users?                 @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * AI GENERATION
+ * =========================
+ */
+model AIGeneration {
+  id String @id @default(uuid()) @db.Uuid
+
+  parentId String  @db.Uuid
+  taskId   String? @db.Uuid
+
+  prompt          String
+  generatedResult Json?
+  modelName       String?
+
+  parent Users @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([parentId, createdAt])
 }
 
-model quizzes {
-  id            String          @id @db.Uuid
-  lesson_id     String?         @db.Uuid
-  title         String?         @db.VarChar(255)
-  passing_score Int?            @default(70)
-  created_at    DateTime?       @db.Timestamp(6)
-  updated_at    DateTime?       @updatedAt @db.Timestamp(6)
-  questions     questions[]
-  quiz_attempts quiz_attempts[]
-  lessons       lessons?        @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * AI ANALYSIS
+ * =========================
+ */
+model AIAnalysis {
+  id String @id @default(uuid()) @db.Uuid
+
+  submissionId String @db.Uuid
+
+  score      Float?
+  totalScore Float?
+  accuracy   Float?
+
+  summary         String?
+  strengths       String?
+  weaknesses      String?
+  recommendations String?
+
+  analysisJson Json?
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([submissionId])
 }
 
-model reviews {
-  id         String    @id @db.Uuid
-  course_id  String?   @db.Uuid
-  user_id    String?   @db.Uuid
-  rating     Int?
-  comment    String?
-  created_at DateTime? @db.Timestamp(6)
-  updated_at DateTime? @updatedAt @db.Timestamp(6)
-  courses    courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * AUDIT LOG
+ * =========================
+ */
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String? @db.Uuid
+
+  action     String
+  entityName String
+  entityId   String? @db.Uuid
+
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+
+  user Users? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
-model sections {
-  id         String    @id @db.Uuid
-  course_id  String?   @db.Uuid
-  title      String?   @db.VarChar(255)
-  sort_order Int?
-  created_at DateTime? @db.Timestamp(6)
-  updated_at DateTime? @updatedAt @db.Timestamp(6)
-  lessons    lessons[]
-  courses    courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/**
+ * =========================
+ * ENUMS
+ * =========================
+ */
+
+enum UserRole {
+  PARENT
+  MEMBER
+  ADMIN
 }
 
-model users {
-  id                        String                      @id @default(uuid()) @db.Uuid
-  email                     String                      @unique @db.VarChar(255)
-  password_hash             String                      @db.VarChar(255)
-  full_name                 String                      @db.VarChar(255)
-  avatar_url                String?
-  role                      String                      @db.VarChar(20)
-  created_at                DateTime?                   @db.Timestamp(6)
-  updated_at                DateTime?                   @updatedAt @db.Timestamp(6)
-  provider                  AuthProvider                @default(LOCAL)
-  providerId                String?
-  conversation_participants conversation_participants[]
-  courses                   courses[]
-  enrollments               enrollments[]
-  files                     files[]
-  messages                  messages[]
-  notifications             notifications[]
-  progress                  progress[]
-  quiz_attempts             quiz_attempts[]
-  reviews                   reviews[]
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum TaskStatus {
+  ASSIGNED
+  VIEWED
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+  ESSAY
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_VIEWED
+  TASK_COMPLETED
+  NEW_SUBMISSION
+  AI_ANALYSIS
 }
 
 enum AuthProvider {
   LOCAL
   GOOGLE
   GITHUB
+}
+
+enum AttachmentType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  AUDIO
+  OTHER
 }

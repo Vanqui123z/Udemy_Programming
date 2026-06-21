@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {ValidationPipe} from '@nestjs/common'
+import { JwtAuthGuard } from '@/utils/JWT/JwtAuthGuard';
+import { Reflector } from '@nestjs/core';  
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,7 +20,7 @@ async function bootstrap() {
   });
 
   app.setGlobalPrefix('api');
+  app.useGlobalGuards(new JwtAuthGuard(new Reflector()));
   await app.listen(process.env.PORT ?? 8000);
-
 }
 bootstrap();
