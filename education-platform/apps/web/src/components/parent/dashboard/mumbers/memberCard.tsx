@@ -5,6 +5,7 @@ import { Member } from "@/types/types";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Eye, ChevronRight, Trophy, Sparkles } from 'lucide-react';
 import { useApp } from "@/context/AppContext";
+import { useMemberStore } from "@/store/member.store";
 
 interface MemberCardProps {
     member: Member;
@@ -32,7 +33,7 @@ function getAvatar(name: string, gender: string) {
 }
 
 export default function MemberCard({  member, onEdit, onDelete, onShowCredentials }: MemberCardProps) {
-    const {setSelectedMemberId} = useApp();
+    const {setSelectedMember} = useMemberStore();
     const router = useRouter();
     const tasks = getTasksForMember(member.id);
     const completed = tasks.filter((t: any) => t.memberStatus[member.id] === 'completed').length;
@@ -42,7 +43,7 @@ export default function MemberCard({  member, onEdit, onDelete, onShowCredential
     return (
         <div key={member.id} className="p-5 group"
             style={cardStyle}
-            onClick={() => {  setSelectedMemberId(member.id); router.push(`/parent/dashboard/task-board`); }}
+            onClick={() => {  setSelectedMember(member); router.push(`/parent/dashboard/task-board`); }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = COLORS.MINT; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px 0 rgba(74,222,128,0.15)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = COLORS.BORDER; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px 0 rgba(41,37,36,0.04)'; }}>
 

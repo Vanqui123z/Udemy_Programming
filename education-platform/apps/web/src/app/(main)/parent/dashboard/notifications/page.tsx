@@ -1,46 +1,61 @@
 "use client";
 
-import React from 'react';
-import { useApp } from '@/context/AppContext';
+
 import { Bell, CheckCircle2, Send, AlertCircle, CheckCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
+
 import {COLORS} from '@/styles/constant/constantColor';
+import { useMutationMark } from '@/hooks/mutations/useMutationMark';
+import { useMarkStore } from '@/store/store';
+import { useMarks } from '@/hooks/queries/useMarks';
+import { useEffect } from 'react';
 const { MINT_BG, TEXT, MUTED, BORDER, BG,MINT_DARK,MINT } = COLORS;
 
 
+
 const TYPE_CFG = {
-  new_task: { icon: Send, bg: '#DBEAFE', color: '#1D4ED8', label: 'Nhiệm vụ mới' },
-  submission: { icon: CheckCircle2, bg: MINT_BG, color: MINT_DARK, label: 'Bài nộp' },
-  deadline: { icon: AlertCircle, bg: '#FEE2E2', color: '#DC2626', label: 'Sắp hết hạn' },
+  TASK_ASSIGNED: { icon: Send, bg: '#DBEAFE', color: '#1D4ED8', label: 'Nhiệm vụ mới' },
+  NEW_SUBMISSION: { icon: CheckCircle2, bg: MINT_BG, color: MINT_DARK, label: 'Bài nộp' },
+  AI_ANALYSIS: { icon: AlertCircle, bg: '#FEE2E2', color: '#DC2626', label: 'Phân tích AI' },
+  TASK_VIEWED: { icon: CheckCircle2, bg: '#D1FAE5', color: '#059669', label: 'Nhiệm vụ đã xem' },
+  TASK_COMPLETED: { icon: CheckCircle2, bg: '#D1FAE5', color: '#059669', label: 'Nhiệm vụ đã hoàn thành' },
 };
 
 export default function NotificationsPanel() {
-  const { currentUser,parents, getNotificationsFor, markNotificationRead, markAllRead, getUnreadCount } = useApp();
-  const parent = parents[0] as any;
-  const notifs = getNotificationsFor('parent', parent.id);
-  const unread = getUnreadCount('parent', parent.id);
+  const {notifications,setGetUnreadCount,getUnreadCount,setNotifications} = useMarkStore();
+  const { data: FetchNotifications } = useMarks.useGetNotificationsFor();
+  const { data: FetchUnreadCount } = useMarks.useUnreadCount();
+  useEffect(() => {
+    setNotifications(FetchNotifications?.map((n: any) => ({ ...n })) || []);
+    setGetUnreadCount(FetchUnreadCount?.unreadCount || 0);
+  }, [FetchNotifications, FetchUnreadCount]);
+  const {markNotificationReadMutation, markAllReadMutation} = useMutationMark();
+  console.log("FetchNotifications:", FetchNotifications);
+  console.log("FetchUnreadCount:", FetchUnreadCount);
+  console.log("Notifications in panel:", notifications);
+  console.log("Unread count in panel:", getUnreadCount);
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-2xl mx-auto w-[stretch]">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 style={{ color: TEXT, fontWeight: 700, fontSize: '1.5rem' }}>
             Thông báo
-            {unread > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: '#FEE2E2', color: '#DC2626' }}>{unread}</span>
+            {getUnreadCount > 0 && (
+              <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: '#FEE2E2', color: '#DC2626' }}>{getUnreadCount}</span>
             )}
           </h2>
-          <p className="text-sm mt-0.5" style={{ color: MUTED }}>{notifs.length} thông báo</p>
+          <p className="text-sm mt-0.5" style={{ color: MUTED }}>{notifications.length} thông báo</p>
         </div>
-        {unread > 0 && (
-          <button onClick={() => markAllRead('parent', parent.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold border transition-all" style={{ borderColor: BORDER, color: MUTED }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = BG; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+        {getUnreadCount > 0 && (
+          <button onClick={() => markAllReadMutation.mutate()} className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold border transition-all" style={{ borderColor: BORDER, color: MUTED }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = BG; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
             <CheckCheck className="w-4 h-4" />Đọc tất cả
           </button>
         )}
       </div>
 
-      {notifs.length === 0 ? (
+      {notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center rounded-3xl border-2 border-dashed" style={{ borderColor: BORDER }}>
           <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: BG }}>
             <Bell className="w-8 h-8" style={{ color: '#D6D3D1' }} />
@@ -50,11 +65,11 @@ export default function NotificationsPanel() {
         </div>
       ) : (
         <div className="space-y-2">
-          {notifs.map(n => {
+          {notifications.map(n => {
             const cfg = TYPE_CFG[n.type];
             const Icon = cfg.icon;
             return (
-              <div key={n.id} onClick={() => !n.read && markNotificationRead(n.id)} className="flex items-start gap-3 p-4 rounded-3xl border-2 cursor-pointer transition-all"
+              <div key={n.id} onClick={() => !n.read && markNotificationReadMutation.mutate(n.id)} className="flex items-start gap-3 p-4 rounded-3xl border-2 cursor-pointer transition-all"
                 style={{ background: n.read ? '#FFFFFF' : MINT_BG, borderColor: n.read ? BORDER : '#86EFAC', boxShadow: n.read ? 'none' : '0 2px 8px 0 rgba(74,222,128,0.12)' }}
                 onMouseEnter={e => { if (n.read) (e.currentTarget as HTMLElement).style.borderColor = MINT; }}
                 onMouseLeave={e => { if (n.read) (e.currentTarget as HTMLElement).style.borderColor = BORDER; }}>

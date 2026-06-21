@@ -7,11 +7,11 @@ import ParentHeader from "@/components/parent/layout/header/ParentHeader";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { COLORS } from "../../../styles/constant/constantColor";
-import { useApp } from "@/context/AppContext";
+import { useMarkStore } from "@/store/store";
 
 
 export default function ParentLayout({ children }: { children: React.ReactNode }) {
-    const {selectedMemberId,getUnreadCount,parents} = useApp();
+    const {getUnreadCount} = useMarkStore();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const pathname = usePathname();
 
@@ -21,11 +21,11 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
             <div className="flex h-screen">
                 <div className="flex flex-col flex-1">
                         <main className="flex h-full overflow-hidden" style={{ background: COLORS.BG }}>
-                            <ParentSidebar selectedMemberId={selectedMemberId} sidebarOpen={sidebarOpen} pathname={pathname} />
+                            <ParentSidebar  sidebarOpen={sidebarOpen} pathname={pathname} />
                             {/* Main content */}
                             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto h-full ">
                                 {/* Header */}
-                                <ParentHeader selectedMemberId={selectedMemberId} pathname={pathname} currentLabel={currentLabel} getUnreadCount={getUnreadCount("parent",parents[0].id )} sidebarOpen={sidebarOpen}
+                                <ParentHeader  pathname={pathname} currentLabel={currentLabel} getUnreadCount={getUnreadCount} sidebarOpen={sidebarOpen}
                                     setSidebarOpen={setSidebarOpen} />
                                 {children}
                             </div>

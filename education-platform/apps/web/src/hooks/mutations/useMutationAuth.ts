@@ -1,17 +1,23 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { authFetchService } from "../../services/fetchAuth.service";
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
+import {useAuthStore} from "@/store/store";
+
+
 export const useMutationAuth = () => {
    
     const router = useRouter();
-    const params = useSearchParams();
+    const { setCurrentUser, setCurrentRole } = useAuthStore();
+
+
     const loginMutation = useMutation({
         mutationFn: (data: { email: string, password: string }) => { return authFetchService.login(data.email, data.password) },
         onSuccess: async (data) => {
-    const role = params.get('role');
             console.log("Login success", data);
-            await localStorage.setItem("token", data.access_token);
+            setCurrentUser(data.user);
+            setCurrentRole(data.user.role);
+            localStorage.setItem("token", data.access_token);
             if (data.user.role === 'PARENT') {
                 router.push('/parent/dashboard');
             } else {

@@ -36,8 +36,8 @@ export const useMutationMark = () => {
   });
 
   const markAllReadMutation = useMutation({
-    mutationFn: (data: { role: "parent" | "member"; userId: string }) =>
-      markFetchService.markAllRead(data),
+    mutationFn: () =>
+      markFetchService.markAllRead(),
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });

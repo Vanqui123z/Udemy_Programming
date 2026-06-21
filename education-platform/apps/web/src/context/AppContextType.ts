@@ -7,8 +7,6 @@ export interface AppContextType {
   setAuthScreen: (s: AuthScreen) => void;
   loginParent: (email: string, password: string) => boolean;
   loginMember: (username: string, password: string) => boolean;
-  registerParent: (name: string, email: string, password: string) => void;
-  logout: () => void;
   parents: Parent[];
   members: Member[];
   tasks: Task[];
@@ -21,9 +19,6 @@ export interface AppContextType {
   setGradingTaskId: (id: string | null) => void;
   pendingAIQuestions: Question[];
   setPendingAIQuestions: (q: Question[]) => void;
-  addMember: (name: string, gender: 'male' | 'female', grade: string, interest: string) => Member;
-  updateMember: (id: string, data: Partial<Member>) => void;
-  deleteMember: (id: string) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'memberStatus' | 'submissions'>) => Task;
   updateTask: (id: string, data: Partial<Task>) => void;
   deleteTask: (id: string) => void;

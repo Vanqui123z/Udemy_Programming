@@ -3,18 +3,18 @@ import { markFetchService } from "@/services/fetchMark.service";
 import { useQuery } from "@tanstack/react-query";
 
 
-const useUnreadCount = (role: 'parent' | 'member')=>{
+const useUnreadCount = ()=>{
     return useQuery({
-        queryKey: ["unreadCount", role ],
-        queryFn: () => markFetchService.getUnreadCount({ role }),
+        queryKey: ["unreadCount"],
+        queryFn: () => markFetchService.getUnreadCount(),
+
     })
 }
 
-const useGetNotificationsFor = (role: 'parent' | 'member')=>{
+const useGetNotificationsFor = ()=>{
     return useQuery({
-        queryKey:["notifications", role],
-        queryFn: () => markFetchService.getNotificationsFor({ role }),
-    })
+        queryKey:["notifications"],
+        queryFn: () => markFetchService.getNotificationsFor()})
 }
 
 export const useMarks = { useUnreadCount, useGetNotificationsFor }

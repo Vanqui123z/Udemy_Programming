@@ -15,6 +15,7 @@ import { Plus, Pencil, Trash2, Clock, GripVertical, Bot, CheckCircle2, Eye, Send
 import { toast } from 'sonner';
 import { COLORS } from '@/styles/constant/constantColor';
 import { useApp } from '@/context/AppContext';
+import {useRouter} from "next/navigation";
 
 const ItemTypes = { TASK: 'task' };
 
@@ -118,10 +119,11 @@ function DayColumn({ date, tasks, memberId, onTaskDrop, onAdd, onEdit, onDelete,
 interface TaskFormState { title: string; note: string; duration: string; assignedTo: string[]; questions: Question[]; }
 
 export default function TaskBoard() {
-    const { selectedMemberId, getMemberById, getTasksForDate, addTask, updateTask, deleteTask, moveTask, getMembersForParent, parents, setParentView, setGradingTaskId, pendingAIQuestions, setPendingAIQuestions } = useApp();
+    const { selectedMemberId, getMemberById, getTasksForDate, addTask, updateTask, deleteTask, moveTask, getMembersForParent, parents, setGradingTaskId, pendingAIQuestions, setPendingAIQuestions } = useApp();
     const member = selectedMemberId ? getMemberById(selectedMemberId) : null;
     const parent = parents[0];
     const allMembers = getMembersForParent(parent.id);
+    const router = useRouter();
 
     const [startDate, setStartDate] = useState(new Date());
     const dates = [0, 1, 2].map(i => format(addDays(startDate, i), 'yyyy-MM-dd'));
@@ -174,7 +176,7 @@ export default function TaskBoard() {
                     <button onClick={() => setStartDate(d => addDays(d, 1))} className="p-2 rounded-xl transition-colors" style={{ color: COLORS.MUTED, background: '#FFFFFF', border: `1px solid ${COLORS.BORDER}` }}>
                         <ChevronRight className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setParentView('ai-creator')} className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border" style={{ background: '#F5F3FF', color: '#7C3AED', borderColor: '#DDD6FE' }}
+                    <button onClick={() => router.push('/parent/dashboard/ai-creator')} className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border" style={{ background: '#F5F3FF', color: '#7C3AED', borderColor: '#DDD6FE' }}
                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#EDE9FE'; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F5F3FF'; }}>
                         <Bot className="w-4 h-4" />AI tạo bài
                     </button>
@@ -186,7 +188,7 @@ export default function TaskBoard() {
                     <DayColumn key={date} date={date} tasks={getTasksForDate(date, selectedMemberId!)} memberId={selectedMemberId!}
                         onTaskDrop={(id, d) => { moveTask(id, d); toast.success('Đã di chuyển nhiệm vụ'); }}
                         onAdd={openAdd} onEdit={openEdit} onDelete={id => setDeleteConfirm(id)}
-                        onGrade={id => { setGradingTaskId(id); setParentView('ai-grader'); }} />
+                        onGrade={id => { setGradingTaskId(id); router.push('/parent/dashboard/ai-grader'); }} />
                 ))}
             </div>
 

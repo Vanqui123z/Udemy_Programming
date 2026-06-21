@@ -14,8 +14,8 @@ export const DemoData = () => {
     const DEMO_PARENT: Parent = { id: 'p1', name: 'Nguyễn Văn An', email: 'an@example.com', password: 'parent123' };
 
     const DEMO_MEMBERS: Member[] = [
-        { id: 'm1', name: 'Nguyễn Minh Khoa', gender: 'male', grade: '5', interest: 'Toán', username: 'khoa.m1.child', password: 'An_parent_001', parentId: 'p1' },
-        { id: 'm2', name: 'Nguyễn Thu Hà', gender: 'female', grade: '3', interest: 'Tiếng Anh', username: 'ha.m2.child', password: 'An_parent_002', parentId: 'p1' },
+        { id: 'm1', name: 'Nguyễn Minh Khoa', gender: 'MALE', grade: '5', interest: ['Toán'], username: 'khoa.m1.child', password: 'An_parent_001', parentId: 'p1' },
+        { id: 'm2', name: 'Nguyễn Thu Hà', gender: 'FEMALE', grade: '3', interest: ['Tiếng Anh'], username: 'ha.m2.child', password: 'An_parent_002', parentId: 'p1' },
     ];
 
     const DEMO_TASKS: Task[] = [

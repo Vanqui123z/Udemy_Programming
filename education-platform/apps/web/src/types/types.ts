@@ -1,6 +1,6 @@
 export type UserRole = 'parent' | 'member';
 export type TaskStatus = 'assigned' | 'viewed' | 'completed';
-export type NotificationType = 'new_task' | 'submission' | 'deadline';
+export type NotificationType = 'TASK_ASSIGNED' | 'TASK_VIEWED' | 'TASK_COMPLETED' | 'NEW_SUBMISSION' | 'AI_ANALYSIS';
 export type QuestionType = 'multiple_choice' | 'short_answer';
 export type FileType = 'document' | 'image' | 'video' | 'audio';
 export type Gender = 'MALE' | 'FEMALE';
@@ -18,6 +18,7 @@ export interface Parent {
 export interface Member {
   id: string;
   name: string;
+  email?: string;
   gender: Gender;
   grade: string;
   interest: string[];

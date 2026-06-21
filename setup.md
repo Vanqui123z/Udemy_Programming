@@ -9,6 +9,11 @@
         pnpm dlx shadcn@latest init
     thêm các component cơ bản button, input, form ,.. 
     Setup redux toolkit, react query 
+    add {textarea,input,...} by shacdn:
+        npx shadcn add textarea
+    format định dạng ngày tháng 
+        pnpm add date-fns
+
 # setup NestJS:
     cài đặt dependencies:
         pnpm add  @nestjs/config  @nestjs/jwt  @nestjs/passport  passport  passport-jwt  bcrypt  class-validator  class-transformer
@@ -19,6 +24,7 @@
         npx prisma db pull (kéo cấu trúc db về)
         npx prisma generate (tạo các models)
         npx prisma migrate dev --name add_oauth_fields ( cập nhật )
+        npx prisma db push ( đẩy cấu trúc lên database)
     Setup JWT:
         pnpm add @nestjs/jwt passport-jwt
     Setup Socket.IO:

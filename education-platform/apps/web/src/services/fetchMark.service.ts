@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL_AUTH = `${process.env.NEXT_PUBLIC_URL_BACKEND}/api/mark`;
+const API_URL_AUTH = `${process.env.NEXT_PUBLIC_URL_BACKEND}/api/marks`;
 import { AIAnalysisItem } from "@/types/types";
 import { fetchCommonTokenGet, fetchCommonTokenPost, } from "@/helper/fetchCommon";
 

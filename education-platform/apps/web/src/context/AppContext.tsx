@@ -39,39 +39,7 @@ const AppContext = createContext<AppContextType | null>(null);
       return false;
     };
 
-    const registerParent = (name: string, email: string, password: string) => {
-      const newParent: Parent = { id: `p${Date.now()}`, name, email, password };
-      setParents(prev => [...prev, newParent]);
-      setCurrentUser(newParent);
-      setCurrentRole('parent');
-    
-    };
-
-    const logout = () => {
-      setCurrentUser(null); setCurrentRole(null); setAuthScreen('landing');
-      setSelectedMemberId(null); setSelectedTaskId(null); setGradingTaskId(null);
-    };
-
-    const addMember = (name: string, gender: 'male' | 'female', grade: string, interest: string): Member => {
-      const parent = currentUser as Parent;
-      const idx = members.filter(m => m.parentId === parent.id).length + 1;
-      const firstName = name.split(' ').pop()?.toLowerCase() || 'user';
-      const username = `${firstName}.m${idx}.child`;
-      const lastName = parent.name.split(' ')[0] || 'Parent';
-      const password = `${lastName}_parent_${String(idx).padStart(3, '0')}`;
-      const newMember: Member = { id: `m${Date.now()}`, name, gender, grade, interest, username, password, parentId: parent.id };
-      setMembers(prev => [...prev, newMember]);
-      return newMember;
-    };
-
-    const updateMember = (id: string, data: Partial<Member>) => {
-      setMembers(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
-    };
-
-    const deleteMember = (id: string) => {
-      setMembers(prev => prev.filter(m => m.id !== id));
-    };
-
+   
     const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'memberStatus' | 'submissions'>): Task => {
       const memberStatus: Record<string, 'assigned' | 'viewed' | 'completed'> = {};
       taskData.assignedTo.forEach(id => { memberStatus[id] = 'assigned'; });
@@ -161,12 +129,11 @@ const AppContext = createContext<AppContextType | null>(null);
   return (
     <AppContext.Provider value={{
       currentUser, currentRole, authScreen, setAuthScreen,
-      loginParent, loginMember, registerParent, logout,
+      loginParent, loginMember, 
       parents, members, tasks, notifications,
        selectedMemberId, setSelectedMemberId,
        selectedTaskId, setSelectedTaskId,
       gradingTaskId, setGradingTaskId, pendingAIQuestions, setPendingAIQuestions,
-      addMember, updateMember, deleteMember,
       addTask, updateTask, deleteTask, moveTask,
       submitTask, setAIAnalysis, updateTaskStatus,
       markNotificationRead, markAllRead, getNotificationsFor,

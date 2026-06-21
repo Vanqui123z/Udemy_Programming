@@ -1,18 +1,19 @@
 import { Bell, ChevronRight, Menu } from 'lucide-react';
 import { COLORS } from '../../../../styles/constant/constantColor';
 import { useRouter } from 'next/navigation';
-import { useApp } from '@/context/AppContext';
+import { useMemberStore } from '@/store/store';
+import { useMembers } from '@/hooks/queries/useMembers';
 
 type ParentNavbarProps = {
-    selectedMemberId: string | null;
     pathname: string;
     currentLabel: string;
     getUnreadCount:  number;
     sidebarOpen: boolean;
     setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
-export default function ParentHeader({ selectedMemberId, pathname,  currentLabel, getUnreadCount, sidebarOpen, setSidebarOpen }: ParentNavbarProps) {
-    const {getMemberById } = useApp();
+export default function ParentHeader({ pathname,  currentLabel, getUnreadCount, sidebarOpen, setSidebarOpen }: ParentNavbarProps) {
+    const {selectedMember} = useMemberStore();
+    
     const router = useRouter()
     return (
         <>
@@ -23,11 +24,11 @@ export default function ParentHeader({ selectedMemberId, pathname,  currentLabel
                 </button>
 
                 <div className="flex items-center gap-1.5 text-sm" style={{ color: COLORS.MUTED }}>
-                    {selectedMemberId ? (
+                    {selectedMember ? (
                         <>
                             <button onClick={() => { router.push('/parent/dashboard/members'); }} className="transition-colors" style={{ color: COLORS.MUTED }} onMouseEnter={e => (e.currentTarget.style.color = COLORS.TEXT)} onMouseLeave={e => (e.currentTarget.style.color = COLORS.MUTED)}>Thành viên</button>
                             <ChevronRight className="w-3.5 h-3.5" />
-                            <span style={{ color: COLORS.TEXT, fontWeight: 700 }}>{getMemberById(selectedMemberId)?.name}</span>
+                            <span style={{ color: COLORS.TEXT, fontWeight: 700 }}>{selectedMember.name}</span>
                             {pathname !== '/parent/dashboard/members' && (
                                 <>
                                     <ChevronRight className="w-3.5 h-3.5" />
