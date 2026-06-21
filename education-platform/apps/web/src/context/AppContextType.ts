@@ -1,0 +1,45 @@
+
+import { AIAnalysisItem, Answer, AuthScreen, FileAttachment, Member, Notification, Parent, Question, Submission, MemberView,Task, UserRole } from '@/types/types';
+export interface AppContextType {
+  currentUser: Parent | Member | null;
+  currentRole: UserRole | null;
+  authScreen: AuthScreen;
+  setAuthScreen: (s: AuthScreen) => void;
+  loginParent: (email: string, password: string) => boolean;
+  loginMember: (username: string, password: string) => boolean;
+  registerParent: (name: string, email: string, password: string) => void;
+  logout: () => void;
+  parents: Parent[];
+  members: Member[];
+  tasks: Task[];
+  notifications: Notification[];
+  selectedMemberId: string | null;
+  setSelectedMemberId: (id: string | null) => void;
+  selectedTaskId: string | null;
+  setSelectedTaskId: (id: string | null) => void;
+  gradingTaskId: string | null;
+  setGradingTaskId: (id: string | null) => void;
+  pendingAIQuestions: Question[];
+  setPendingAIQuestions: (q: Question[]) => void;
+  addMember: (name: string, gender: 'male' | 'female', grade: string, interest: string) => Member;
+  updateMember: (id: string, data: Partial<Member>) => void;
+  deleteMember: (id: string) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'memberStatus' | 'submissions'>) => Task;
+  updateTask: (id: string, data: Partial<Task>) => void;
+  deleteTask: (id: string) => void;
+  moveTask: (taskId: string, newDate: string) => void;
+  submitTask: (taskId: string, memberId: string, files: FileAttachment[], answers: Answer[], note?: string) => void;
+  setAIAnalysis: (taskId: string, memberId: string, score: number, analysis: AIAnalysisItem[]) => void;
+  updateTaskStatus: (taskId: string, memberId: string, status: 'viewed') => void;
+  markNotificationRead: (id: string) => void;
+  markAllRead: (role: 'parent' | 'member', userId: string) => void;
+  getNotificationsFor: (role: 'parent' | 'member', userId: string) => Notification[];
+  getTasksForMember: (memberId: string) => Task[];
+  getTasksForDate: (date: string, memberId?: string) => Task[];
+  getMemberById: (id: string) => Member | undefined;
+  getTaskById: (id: string) => Task | undefined;
+  getUnreadCount: (role: 'parent' | 'member', userId: string) => number;
+  getMembersForParent: (parentId: string) => Member[];
+  isTaskDetail: boolean;
+  setIsTaskDetail: (isTaskDetail: boolean) => void;
+}

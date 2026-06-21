@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ReactQueryProvider from "../providers/react-query-provider";
 import "./globals.css";
-import { AuthProvider } from "@/providers/contextAPI-provider";
-import { SessionProvider } from "next-auth/react";
 import ProvidersAuth from "@/providers/ProviderAuth";
+import AppProvider from "@/context/AppContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +33,11 @@ export default function RootLayout({
       >
         <body className="min-h-full flex flex-col">
           <ProvidersAuth>
-            <ReactQueryProvider>
-              {children}
-            </ReactQueryProvider>
+            <AppProvider>
+              <ReactQueryProvider>
+                {children}
+              </ReactQueryProvider>
+            </AppProvider>
           </ProvidersAuth>
         </body>
       </html>

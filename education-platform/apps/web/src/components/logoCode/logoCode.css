@@ -1,0 +1,18 @@
+/* ─── Logo ─── */
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: inherit;
+  }
+  .logo-icon {
+    position: relative; width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-hex { color: #00838f; position: absolute; }
+  .logo-inner {
+    position: relative; z-index: 1;
+    font-size: 13px; font-weight: 700; color: #00838f;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .logo-text { font-size: 17px; color: #1a2332; letter-spacing: -.3px; }
+  .logo-bold { font-weight: 700; }
+ 
